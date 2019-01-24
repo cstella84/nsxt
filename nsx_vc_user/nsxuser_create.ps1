@@ -1,14 +1,16 @@
 # Parameter help description
-[string]$domain = "vsphere.local"
-[string]$nsxtuser = "svc_nsx"
-[string]$vcentername = "vc-01a.corp.local"
+param(
+    [string]$domain = "vsphere.local",
+    [string]$nsxtuser = "svc_nsx",
+    [string]$vcenter = "vc-01a.corp.local",
+    # NSX_T permissions
+    [string]$nsxt_role = "nsxt_permissions"
+)
 
 
 # NSX_T user
 $nsxt_user = "$domain\$nsxtuser"
 
-# NSX_T permissions
-$nsxt_role = "nsxt_permissions"
  
 #Roles for NSX-T 2.3+
 $nsxt_privileges = @(
@@ -107,6 +109,13 @@ $nsxt_privileges = @(
 'VApp.Rename'
 )
 
+if ( $global:DefaultVIServer.IsConnected -ne $True) {
+    write-host -ForegroundColor Green "Collecting vSphere credentials"
+    $creds = Get-Credential
+    write-host -ForegroundColor Green "Connecting to vCenter $vcenter"
+    $null = Connect-VIServer -Server $vCenter -Credential $creds
+}
+
 
 # PRE CHECK
 # VCSA has no APIS for SSO features in VCSA. Therefore an account must be manually made otherwise it does not work. I will do a check and throw before doing this to ensure user has gone and made a manual user. Ugh!
@@ -136,16 +145,18 @@ else {
     if ($existingrole){
         $guid = (new-guid).Guid.substring(0,6)
         write-host -ForegroundColor Green "Found existing role named $nsxt_role. Creating a new role $nsxt_role-$guid and assigning to $nsxt_user"
-        New-VIRole -Name "$nsxt_role-$guid" -Privilege (Get-VIPrivilege -id $nsxt_privileges) | out-null
+        $null = New-VIRole -Name "$nsxt_role-$guid" -Privilege (Get-VIPrivilege -id $nsxt_privileges)
 
-        New-VIPermission -Entity $rootFolder -Principal $nsxt_user -Role $nsxt_role -Propagate:$true | Out-Null
+        $null = New-VIPermission -Entity $rootFolder -Principal $nsxt_user -Role $nsxt_role -Propagate:$true
     }
     else {
         write-host -ForegroundColor Green "Creating role $nsxt_role - Assigning to $nsxt_user"
-        New-VIRole -Name $nsxt_role -Privilege (Get-VIPrivilege -id $nsxt_privileges) | out-null
+        $null = New-VIRole -Name $nsxt_role -Privilege (Get-VIPrivilege -id $nsxt_privileges)
         
-        New-VIPermission -Entity $rootFolder -Principal $nsxt_user -Role $nsxt_role -Propagate:$true | Out-Null
+        $null = New-VIPermission -Entity $rootFolder -Principal $nsxt_user -Role $nsxt_role -Propagate:$true
     } 
 
 }
+
+$null = Disconnect-VIServer -confirm:$false
 

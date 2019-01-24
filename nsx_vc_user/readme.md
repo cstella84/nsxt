@@ -31,7 +31,21 @@ When working it will create the role and permissions and assign it to the root f
 PS /Users/aburke/Repositories/nsx-scripts/NSX-T> ./nsxuser_create.ps1
 Creating role nsxt_permissions - Assigning to vsphere.local\svc_nsx
 ```
+## Using an Active Directory account
 
+If you're using an AD account you can use the parameter `-domain` to select your domain
+```
+PS /Users/aburke/Repositories/nsxt/nsx_vc_user> ./nsxuser_create.ps1 -domain corp.local -user svc_nsx
+Collecting vSphere credentials
+
+PowerShell credential request
+Enter your credentials.
+User: administrator@vsphere.local
+Password for user administrator@vsphere.local: ********
+
+Connecting to vCenter vc-01a.corp.local
+Found existing role named nsxt_permissions. Creating a new role nsxt_permissions-09e4e2 and assigning to corp.local\svc_nsx
+```
 ## Existing group and use it to assign
 
 This will discover if the group exists and if it does it will then append a 6 character GUID to the privilige group name. It will then assign it to the root folder and defined user.

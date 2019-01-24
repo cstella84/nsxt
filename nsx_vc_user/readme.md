@@ -4,7 +4,8 @@ This create the right roles for vCenter NSX Service Account.
 
 
 Below outlines three scenarios.
-##No svc_nsx account
+
+## No svc_nsx account
 
 ```
     PS /Users/aburke/Repositories/nsx-scripts/NSX-T> ./nsxuser_create.ps1
@@ -22,7 +23,7 @@ Below outlines three scenarios.
     5. Rerun the script
 ```
 
-##Creation and working
+## Creation and working
 
 When working it will create the role and permissions and assign it to the root folder for the defined user.
 
@@ -31,7 +32,7 @@ PS /Users/aburke/Repositories/nsx-scripts/NSX-T> ./nsxuser_create.ps1
 Creating role nsxt_permissions - Assigning to vsphere.local\svc_nsx
 ```
 
-##Existing group and use it to assign
+## Existing group and use it to assign
 
 This will discover if the group exists and if it does it will then append a 6 character GUID to the privilige group name. It will then assign it to the root folder and defined user.
 

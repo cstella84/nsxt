@@ -1,21 +1,23 @@
 {
-    // VSCode Rest-Client Settings
-    "rest-client.previewResponseInUntitledDocument": true,
-    "workbench.settings.editor": "json",
-    "rest-client.environmentVariables": {
-      "$shared": {
-        "version": "v1"
-      },
-      "Lab01": {
-        "nsxmgr": "192.168.172.127",
-        "mempercent": "80",
-        "cpupercent": "80",
-      },
-      "Lab03": {
-        "nsxmgr": "nsxmgr-01a.corp.local",
-        "token": "prod token"
-      },
-      }
-    
+  // VSCode Rest-Client Settings
+  "rest-client.previewResponseInUntitledDocument": true,
+  "workbench.settings.editor": "json",
+  "rest-client.environmentVariables": {
+    "$shared": {
+      "version": "v1"
+    },
+    "Lab01": {
+      "nsxmgr": "192.168.172.127",
+      "username": "admin",
+      "password": "VMware1!VMware1!",
+      "mempercent": "80",
+      "cpupercent": "80"
+    },
+    "Lab03": {
+      "nsxmgr": "nsxmgr-01a.corp.local",
+      "username": "admin",
+      "password": "VMware1!VMware1!",
+      "token": "prod token"
+    }
   }
-  
+}

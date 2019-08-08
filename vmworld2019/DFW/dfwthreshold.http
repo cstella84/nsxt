@@ -1,0 +1,109 @@
+// Using REST client in VScode to interfact with NSX-T MP API.
+// Using variables from settings.json in addition to response JSON parsing
+// First step is to get Transport Nodes. I want to retrieve the first three. I cannot loop through an array as there is no engine to do this with REST Client ergo I need to know what is retieved.
+
+//Assign GetTransportNodes to a variable.
+# @name GetTransportNodes
+GET https://{{nsxmgr}}/api/v1/transport-nodes
+Authorization: Basic admin VMware1!VMware1!
+content-type: application/json
+
+// The first three Transport Nodes returned are my ESXi Transport Nodes. I will store them in a variable.
+
+// Reference the variable of GetTransportNodes response body and search each result for node_id.
+###
+@esx01id = {{GetTransportNodes.response.body.$.results[0].node_id}}
+@esx02id = {{GetTransportNodes.response.body.$.results[1].node_id}}
+@esx03id = {{GetTransportNodes.response.body.$.results[2].node_id}}
+
+// Assign CreateNsGroup variable.
+// Here use the variables of each TN node ID to 
+# @name CreateNsGroup
+POST https://{{nsxmgr}}/api/v1/ns-groups
+Authorization: Basic admin VMware1!VMware1!
+content-type: application/json
+
+{
+  "display_name":"dfwthreshold-esxi-KOHEIISWATCHING",
+  "members": [
+    {
+      "target_type": "TransportNode",
+      "target_property": "id",
+      "op": "EQUALS",
+      "value": "{{esx01id}}",
+      "target_resource": {
+        "is_valid": true
+      },
+    "resource_type": "NSGroupSimpleExpression"
+    },
+    {
+      "target_type": "TransportNode",
+      "target_property": "id",
+      "op": "EQUALS",
+      "value": "{{esx02id}}",
+      "target_resource": {
+        "is_valid": true
+      },
+      "resource_type": "NSGroupSimpleExpression"
+    },
+    {
+      "target_type": "TransportNode",
+      "target_property": "id",
+      "op": "EQUALS",
+      "value": "{{esx03id}}",
+      "target_resource": {
+        "is_valid": true
+      },
+      "resource_type": "NSGroupSimpleExpression"
+    }
+  ]
+}
+
+###
+//Here we get the 
+@groupId = {{CreateNsGroup.response.body.$.id}}
+# @name UseNsGroupId
+GET https://{{nsxmgr}}/api/v1/ns-groups/{{groupId}}
+Authorization: Basic admin VMware1!VMware1!
+content-type: application/json
+
+###
+//Here we post the Firewall Profile using mem and cpu variables from settings.json
+//Store the POST in a variable called PostFirewallProfile
+# @name PostFirewallProfile
+POST https://{{nsxmgr}}/api/v1/firewall/profiles
+Authorization: Basic admin VMware1!VMware1!
+content-type: application/json
+
+{
+    "cpu_threshold_percentage": "{{cpupercent}}",
+    "display_name" : "VMworld ESXi DFW Threshold Profile - Test",
+    "mem_threshold_percentage": "{{mempercent}}",
+    "resource_type" : "FirewallCpuMemThresholdsProfile"
+}
+
+###
+///Now to merge the Posted firewall profile and NSgroup into a service configuration
+@profileId = {{PostFirewallProfile.response.body.$.id}}
+
+POST https://{{nsxmgr}}/api/v1/service-configs
+Authorization: Basic admin VMware1!VMware1!
+content-type: application/json
+
+{
+    "display_name":"DfwCpuMemServiceConfig",
+    "profiles":[
+            {
+                "profile_type":"FirewallCpuMemThresholdsProfile",
+                "target_id":"{{profileId}}"
+            }
+        ],
+    "precedence": 10,
+    "applied_to": [
+        {
+            "target_id":"{{groupId}}",
+            "target_type" : "NSGroup"
+        }
+    ]
+}
+//Working NSgroup with assigned ESXi transport nodes with an associated Threshold profile.

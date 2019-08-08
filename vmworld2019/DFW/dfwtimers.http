@@ -10,7 +10,7 @@
 //     for the logical ports.
 
 PATCH https://{{nsxmgr}}/policy/api/v1/infra
-Authorization: Basic admin VMware1!VMware1!
+Authorization: Basic {{username}} {{password}}
 content-type: application/json
     
 {

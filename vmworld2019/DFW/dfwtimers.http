@@ -1,0 +1,78 @@
+// Using REST client in VScode to interfact with NSX-T Policy hierarchical API.
+// Uses variables in .vscode/settings.json for the NSX Manager and Credentials.
+// The outcome after running this will be:
+//   - Firewall Session Timer Profile will be created
+//   - Group will be created with a membership criteria of any logical port
+//     tagged with the following: 
+//       - Scope = DFWTimerProfile
+//       - Tag = TCP
+//   - Firewall Session Timer Profile will be applied/bound to the group created
+//     for the logical ports.
+
+PATCH https://{{nsxmgr}}/policy/api/v1/infra
+Authorization: Basic admin VMware1!VMware1!
+content-type: application/json
+    
+{
+    "resource_type": "Infra",
+    "children": [
+        {
+            "PolicyFirewallSessionTimerProfile": {
+                "tcp_first_packet": 120,
+                "tcp_opening": 30,
+                "tcp_established": 86400,
+                "tcp_closing": 120,
+                "tcp_finwait": 45,
+                "tcp_closed": 20,
+                "udp_first_packet": 60,
+                "udp_single": 30,
+                "udp_multiple": 60,
+                "icmp_first_packet": 20,
+                "icmp_error_reply": 10,
+                "resource_type": "PolicyFirewallSessionTimerProfile",
+                "id": "DFW_Extended_Timer_Profile_TCP",
+                "display_name": "DFW Extended Timer Profile TCP",
+                "description": "DFW timer profile that extends the TCP Established timer to 1-day."
+            },
+            "resource_type": "ChildPolicyFirewallSessionTimerProfile"
+        },
+        {
+            "resource_type": "ChildResourceReference",
+            "id": "default",
+            "target_type": "Domain",
+            "children": [
+                {
+                    "Group": {
+                        "expression": [
+                            {
+                                "member_type": "LogicalPort",
+                                "key": "Tag",
+                                "operator": "EQUALS",
+                                "value": "DFWTimerProfile|TCP",
+                                "resource_type": "Condition"
+                            }
+                        ],
+                        "resource_type": "Group",
+                        "id": "Extended_DFW_TCP_Timers",
+                        "display_name": "Extended DFW TCP Timers",
+                        "description": "Logical Ports in this group will have the DFW TCP Established timers extended.",
+                        "children": [
+                            {
+                                "PolicyFirewallSessionTimerProfileBindingMap": {
+                                    "firewall_session_timer_profile_path": "/infra/firewall-session-timer-profiles/DFW_Extended_Timer_Profile_TCP",
+                                    "sequence_number": 65536,
+                                    "resource_type": "PolicyFirewallSessionTimerProfileBindingMap",
+                                    "id": "DFW_Extended_Timer_Profile_TCP_BindingMap",
+                                    "display_name": "DFW Extended Timer Profile TCP Binding Map",
+                                    "description": "Binding map to link the DFW Timer Profile (ID: DFW_Extended_Timer_Profile_TCP) to the Group with ID: Extended_DFW_TCP_Timers) "
+                                },
+                                "resource_type": "ChildPolicyFirewallSessionTimerProfileBindingMap"
+                            }
+                        ]
+                    },
+                    "resource_type": "ChildGroup"
+                }
+            ]
+        }
+    ]
+}
